@@ -10,7 +10,7 @@ const ZONE = config.ZONE
 
 const AUTH_HEADERS = {
     'X-Auth-Email': EMAIL,
-    'X-Auth-Key':  API_KEY
+    'X-Auth-Key':  API_KEY,
 }
 
 /**
@@ -18,7 +18,10 @@ const AUTH_HEADERS = {
  * 
  */
 function listDnsRecords() {
-    let requestUrl = BASE_URL + 'zones/' + ZONE + '/dns_records?type=A&per_page=100'
+    let requestUrl = BASE_URL 
+        + 'zones/' 
+        + ZONE 
+        + '/dns_records?type=A&per_page=100'
 
     return fetch(requestUrl, {
         headers: AUTH_HEADERS
@@ -30,11 +33,40 @@ function listDnsRecords() {
 
 /**
  * 
- * @param {*} identifiers an array of identifiers 
+ * @param {*} records an array of records to update, from listDnsRecords
  * @param {*} newIp the new IP address to update 
  */
-async function updateRecordIP(identifiers, newIp) {
+function updateRecordIP(records, newIp) {
+    return Promise.all(
+        records.map(record => updateSingleRecord(record, newIp))
+    )
+}
 
+/**
+ * Update a single record
+ * @param {*} record the record to update, from listDnsRecords
+ * @param {*} newIp the new IP address
+ * @returns the result
+ */
+function updateSingleRecord(record, newIp) {
+    let requestUrl = BASE_URL + 'zones/' + ZONE + '/dns_records/' + record.id
+
+    let bodyObj = {
+        type: record.type,
+        name: record.name,
+        content: newIp,
+        ttl: record.ttl,
+        proxied: record.proxied
+    }
+
+    return fetch(requestUrl, {
+        method: 'PUT',
+        body: JSON.stringify(bodyObj),
+        headers: {
+            ...AUTH_HEADERS,
+            'Content-Type': 'application/json'
+        }
+    }).then(res => res.json())
 }
 
 module.exports = {

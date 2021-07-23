@@ -1,5 +1,9 @@
-const config = require('./config.js')
+const publicIp = require('public-ip');
+const api = require('./api')
 
-const API_TOKEN = config.API_TOKEN
-const EMAIL = config.EMAIL
-const BASE_URL = 'https://api.cloudflare.com/client/v4/'
+publicIp.v4().then((ip) => {
+    api.listDnsRecords().then(records => {
+        api.updateRecordIP(records, ip)
+    })
+})
+
